@@ -1,3 +1,4 @@
 data/
 *.pt
 .ipynb_checkpoints/
+*.pyc
