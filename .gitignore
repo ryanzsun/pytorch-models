@@ -2,3 +2,4 @@ data/
 *.pt
 .ipynb_checkpoints/
 *.pyc
+.vscode/
