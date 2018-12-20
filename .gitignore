@@ -1,6 +1,7 @@
 data/
-*.pt
+*.path
 .ipynb_checkpoints/
 *.pyc
 .vscode/
 */__pycache__
+test.py
