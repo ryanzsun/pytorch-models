@@ -22,7 +22,7 @@ transform_test = transforms.Compose([
 ])
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=128, shuffle=True, num_workers=2)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True, num_workers=2)
 
 testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(testset, batch_size=50, shuffle=False, num_workers=2)
@@ -38,8 +38,11 @@ model = model.cuda()
 optimizer = optim.Adam(model.parameters(), lr=3e-4, weight_decay=5e-4)
 scheduler = CosineWithRestarts(optimizer, T_max = 10, factor = 2)
 
-for epoch in range(100):  # loop over the dataset multiple times
+best_acc = 0
 
+for epoch in range(200):  # loop over the dataset multiple times
+    model.train()
+    scheduler.step()
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
         # get the inputs
@@ -61,4 +64,31 @@ for epoch in range(100):  # loop over the dataset multiple times
         print('[%d] loss: %.3f' %
                 (epoch + 1, running_loss / trainloader.__len__()))
 
+    model.eval()
+    test_loss = 0
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            inputs, targets = inputs.cuda(), targets.cuda()
+            outputs = model(inputs)
+            loss = criterion(outputs, targets)
+
+            test_loss += loss.item()
+            _, predicted = outputs.max(1)
+            total += targets.size(0)
+            correct += predicted.eq(targets).sum().item()
+
+    acc = 100.*correct/total
+    if acc > best_acc:
+        print('Saving.. acc', acc)
+        state = {
+            'net': model.state_dict(),
+            'acc': acc,
+            'epoch': epoch,
+        }
+        torch.save(state, 'densenet_cifar10.path')
+        best_acc = acc
+
 print('Finished Training')
+print("best acc", best_acc)
