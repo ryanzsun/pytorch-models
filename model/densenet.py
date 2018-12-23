@@ -65,6 +65,15 @@ class DenseNet(nn.Module):
         self.bn = nn.BatchNorm2d(n_channels)
         self.linear = nn.Linear(n_channels, num_classes)
 
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.constant_(m.bias, 0)
+
     def _make_layers(self, in_channels, n_block):
         layers = []
         for i in range(n_block):

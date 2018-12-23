@@ -9,6 +9,10 @@ import torchvision.transforms as transforms
 from cosine_annealing_warm_restart import *
 from model import *
 
+batch_size = 96
+
+n_gpu = torch.cuda.device_count()
+
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
@@ -22,7 +26,7 @@ transform_test = transforms.Compose([
 ])
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True, num_workers=2)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size*n_gpu, shuffle=True, num_workers=8)
 
 testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(testset, batch_size=50, shuffle=False, num_workers=2)
@@ -32,15 +36,17 @@ classes = ('plane', 'car', 'bird', 'cat',
 
 
 criterion = nn.CrossEntropyLoss()
-model = DenseNet121()
+model = DenseNet201()
 model = model.cuda()
+if n_gpu>1:
+    model = nn.DataParallel(model)
 
 optimizer = optim.Adam(model.parameters(), lr=3e-4, weight_decay=5e-4)
 scheduler = CosineWithRestarts(optimizer, T_max = 10, factor = 2)
 
-best_acc = 0
+best_acc = 94
 
-for epoch in range(200):  # loop over the dataset multiple times
+for epoch in range(300):  # loop over the dataset multiple times
     model.train()
     scheduler.step()
     running_loss = 0.0
