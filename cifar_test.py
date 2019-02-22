@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 from cosine_annealing_warm_restart import *
 from model import *
 
-batch_size = 96
+batch_size = 128
 
 n_gpu = torch.cuda.device_count()
 
@@ -36,7 +36,8 @@ classes = ('plane', 'car', 'bird', 'cat',
 
 
 criterion = nn.CrossEntropyLoss()
-model = DenseNet201()
+# model = DenseNet201()
+model = Inception()
 model = model.cuda()
 if n_gpu>1:
     model = nn.DataParallel(model)
